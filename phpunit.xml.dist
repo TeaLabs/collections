@@ -7,6 +7,9 @@
          stopOnFailure="false"
          syntaxCheck="false">
     <testsuites>
+        <testsuite name="key">
+            <file>tests/KeyTest.php</file>
+        </testsuite>
         <testsuite name="arr">
             <file>tests/ArrTest.php</file>
         </testsuite>
