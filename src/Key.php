@@ -156,9 +156,9 @@ class Key implements Countable, ArrayAccess, IteratorAggregate
 	public function offsetSet($offset, $segment)
 	{
 		if (is_null($offset)) {
-			$this->segments[] = $segment;
+			$this->segments[] = (string) $segment;
 		} else {
-			$this->segments[$offset] = $segment;
+			$this->segments[$offset] = (string) $segment;
 		}
 	}
 
