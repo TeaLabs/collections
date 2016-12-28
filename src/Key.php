@@ -27,8 +27,8 @@ class Key implements Countable, ArrayAccess, IteratorAggregate
 	/**
 	 * Instantiate the Key instance.
 	 *
-	 * @param  string|array|null $segments
-	 * @param  string|null       $separator
+	 * @param  mixed  $segments
+	 * @param  string $separator
 	 * @return void
 	 */
 	public function __construct($segments = null, $separator = null)
@@ -39,6 +39,8 @@ class Key implements Countable, ArrayAccess, IteratorAggregate
 			$this->segments = [];
 		elseif(is_array($segments))
 			$this->segments = $segments;
+		elseif ($segments instanceof self)
+			$this->segments = $segments->segments();
 		else
 			$this->segments = static::parse($segments, $this->separator);
 	}
@@ -171,8 +173,8 @@ class Key implements Countable, ArrayAccess, IteratorAggregate
 	/**
 	 * Create a new Key instance.
 	 *
-	 * @param  string|array|null  $segments
-	 * @param  string|null        $separator
+	 * @param  mixed  $segments
+	 * @param  string $separator
 	 * @return static
 	 */
 	public static function make($segments = null, $separator = null)
@@ -183,13 +185,13 @@ class Key implements Countable, ArrayAccess, IteratorAggregate
 	/**
 	 * Parse a key path string to an array of it's segments
 	 *
-	 * @param  mixed        $key
-	 * @param  string|null  $separator
+	 * @param  mixed  $key
+	 * @param  string $separator
 	 * @return static
 	 */
 	public static function cast($key = null, $separator = null)
 	{
-		return $key instanceof self ? $key : new static($key, $separator);
+		return ($key instanceof self) ? $key : new static($key, $separator);
 	}
 
 	/**
