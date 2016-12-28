@@ -39,8 +39,11 @@ class Key implements Countable, ArrayAccess, IteratorAggregate
 			$this->segments = [];
 		elseif(is_array($segments))
 			$this->segments = $segments;
-		elseif ($segments instanceof self)
+		elseif ($segments instanceof self){
 			$this->segments = $segments->segments();
+			if(is_null($separator))
+				$this->separator = $segments->separator();
+		}
 		else
 			$this->segments = static::parse($segments, $this->separator);
 	}
