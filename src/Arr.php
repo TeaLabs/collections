@@ -117,10 +117,10 @@ class Arr
 	public static function exists($array, $key)
 	{
 		if ($array instanceof ArrayAccess) {
-			return $array->offsetExists($key);
+			return $array->offsetExists( (string) $key);
 		}
 
-		return array_key_exists($key, $array);
+		return array_key_exists( (string) $key, $array);
 	}
 
 	/**
@@ -202,7 +202,7 @@ class Arr
 	{
 		$original = &$array;
 
-		$keys = (array) $keys;
+		$keys = static::toArray($keys);
 
 		if (count($keys) === 0) {
 			return;
@@ -216,22 +216,21 @@ class Arr
 				continue;
 			}
 
-			$parts = explode('.', $key);
+			$parts = static::toKey($key);
 
 			// clean up before each pass
 			$array = &$original;
 
 			while (count($parts) > 1) {
-				$part = array_shift($parts);
+				$part = $parts->shift();
 
-				if (isset($array[$part]) && is_array($array[$part])) {
+				if (static::exists($array, $part) && static::accessible($array[$part]))
 					$array = &$array[$part];
-				} else {
+				else
 					continue 2;
-				}
 			}
 
-			unset($array[array_shift($parts)]);
+			unset($array[$parts->shift()]);
 		}
 	}
 
@@ -281,7 +280,7 @@ class Arr
 			return false;
 		}
 
-		$keys = (array) $keys;
+		$keys = static::toArray($keys);
 
 		if (! $array) {
 			return false;
@@ -298,7 +297,7 @@ class Arr
 				continue;
 			}
 
-			foreach (explode('.', $key) as $segment) {
+			foreach (static::toKey($key) as $segment) {
 				if (static::accessible($subKeyArray) && static::exists($subKeyArray, $segment)) {
 					$subKeyArray = $subKeyArray[$segment];
 				} else {
@@ -506,9 +505,11 @@ class Arr
 			return $object->all();
 		elseif ($object instanceof IlluminateArrayable)
 			return $object->toArray();
-		elseif(!is_iterable($object) && $object instanceof IlluminateJsonable)
+		elseif(method_exists($object, '__toString'))
+			return [$object];
+		elseif($object instanceof IlluminateJsonable && !is_iterable($object))
 			return json_decode($object->toJson(), true);
-		elseif (is_iterable($object) && !method_exists($object, '__toString')) {
+		elseif (is_iterable($object)) {
 			$array = [];
 			foreach ($object as $key => $value)
 				$array[$key] = $value;
@@ -518,6 +519,17 @@ class Arr
 		return (array) $object;
 	}
 
+	/**
+	 * Cast the given value to an instance of Key.
+	 *
+	 * @param  mixed $key
+	 * @param  string $separator
+	 * @return \Tea\Collections\Key
+	 */
+	public static function toKey($key = null, $separator = null)
+	{
+		return Key::make($key, $separator);
+	}
 
 	/**
 	 * Filter the array using the given callback.
