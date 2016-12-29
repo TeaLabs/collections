@@ -3,6 +3,7 @@ namespace Tea\Collections;
 
 use Countable;
 use ArrayAccess;
+use Tea\Uzi\Uzi;
 use ArrayIterator;
 use IteratorAggregate;
 
@@ -218,7 +219,7 @@ class Key implements Countable, ArrayAccess, IteratorAggregate
 	 */
 	public static function implode($segments, $separator = self::SEPARATOR)
 	{
-		return implode((string) $separator, $segments);
+		return (string) Uzi::join($separator, $segments, true);
 	}
 
 }
