@@ -49,30 +49,6 @@ class Collection extends IlluminateCollection implements Arrayable, Jsonable
 	}
 
 	/**
-	 * Replace items in the collection with new values and/or add new ones.
-	 * It is similar to {@see \Tea\Collections\Collection::replace()} but
-	 * updates items on the current instance instead.
-	 *
-	 * @uses   array_replace() when $recursive is FALSE or given.
-	 * @uses   array_replace_recursive() when $recursive is TRUE.
-	 *
-	 * @param  mixed  $items
-	 * @param  bool   $recursive
-	 * @return $this
-	 */
-	public function extend($items, $recursive = false)
-	{
-		$items = $this->getArrayableItems($items);
-
-		if($recursive)
-			$this->items = array_replace_recursive($this->items, $items);
-		else
-			$this->items = array_replace($this->items, $items);
-
-		return $this;
-	}
-
-	/**
 	 * Determine if an any of item exists in the collection.
 	 *
 	 * @param  iterable  $keys
@@ -99,49 +75,51 @@ class Collection extends IlluminateCollection implements Arrayable, Jsonable
 	 * @param  bool   $recursive
 	 * @return static
 	 */
-	public function merge($items, $recursive = false)
+	public function merge($items, $strict = false, $recursive = false)
 	{
-		return $this->copy()->update($items, $recursive);
+		return $this->copy()->update($items, $strict, $recursive);
 	}
 
 	/**
-	 * Replace the items in the collection with new values. It is similar to
-	 * {@see \Tea\Collections\Collection::extend()} but instead of replacing
-	 * items in the current instance, it returns a new Collection with the
-	 * replaced items.
+	 * Update the collection with another collection of items. If an item in the
+	 * collection also exists in the new $items, it's value will be replaced by
+	 * the value in the new $items. If an item exists in the new $items but not
+	 * in the collection, it will be added to the collection as well.
 	 *
-	 * @uses   array_replace() when $recursive is FALSE or not given.
-	 * @uses   array_replace_recursive() when $recursive is TRUE.
+	 * By default, only the items with string keys are updated. Those of numeric
+	 * keys, are instead appended to the collection with (possibly) new key(s)
+	 * even if the original collection contained item(s) with the same key.
+	 * $strict can be set to true to have numerically indexed items updated.
 	 *
-	 * @param  mixed  $items
-	 * @param  bool   $recursive
-	 * @return static
-	 */
-	public function replace($items, $recursive = false)
-	{
-		return $this->copy()->extend($items, $recursive);
-	}
-
-	/**
-	 * Merge the collection with the given items. It is similar to
-	 * {@see \Tea\Collections\Collection::merge()} but merges the new items into
-	 * the current instance.
+	 * Also, {@see \Tea\Collections\Collection::merge()}.
 	 *
-	 * @uses   array_merge() when $recursive is FALSE or not given
-	 * @uses   array_merge_recursive() when $recursive is TRUE
+	 * When $updateNumeric is false or not given:
+	 * @uses   array_merge() when $recursive is false (default)
+	 * @uses   array_merge_recursive() when $recursive is true
+	 *
+	 * When $updateNumeric is true:
+	 * @uses   array_replace() when $recursive is false (default)
+	 * @uses   array_replace_recursive() when $recursive is true
 	 *
 	 * @param  mixed  $items
+	 * @param  bool   $updateNumeric
 	 * @param  bool   $recursive
 	 * @return $this
 	 */
-	public function update($items, $recursive = false)
+	public function update($items, $strict = false, $recursive = false)
 	{
 		$items = $this->getArrayableItems($items);
 
-		if($recursive)
-			$this->items = array_merge_recursive($this->items, $items);
+		if($updateNumeric)
+			if($recursive)
+				$this->items = array_replace_recursive($this->items, $items);
+			else
+				$this->items = array_replace($this->items, $items);
 		else
-			$this->items = array_merge($this->items, $items);
+			if($recursive)
+				$this->items = array_merge_recursive($this->items, $items);
+			else
+				$this->items = array_merge($this->items, $items);
 
 		return $this;
 	}
