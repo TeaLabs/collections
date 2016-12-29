@@ -200,6 +200,36 @@ class KeyTest extends TestCase
 		$this->assertEquals($expected, $result);
 	}
 
+	public function testPop()
+	{
+		$key = $this->make('foo.bar.baz');
+
+		$this->assertEquals(3, $key->count());
+
+		$baz = $key->pop();
+		$this->assertEquals('baz', $baz);
+		$this->assertEquals(2, $key->count());
+
+		$bar = $key->pop();
+		$this->assertEquals('bar', $bar);
+		$this->assertEquals(1, $key->count());
+	}
+
+	public function testShift()
+	{
+		$key = $this->make('foo.bar.baz');
+
+		$this->assertEquals(3, $key->count());
+
+		$foo = $key->shift();
+		$this->assertEquals('foo', $foo);
+		$this->assertEquals(2, $key->count());
+
+		$bar = $key->shift();
+		$this->assertEquals('bar', $bar);
+		$this->assertEquals(1, $key->count());
+	}
+
 	public function testOffsetSet()
 	{
 		$key = $this->make('baz');

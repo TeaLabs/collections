@@ -95,6 +95,26 @@ class Key implements Countable, ArrayAccess, IteratorAggregate
 	}
 
 	/**
+	 * Pop the last segment from the key and return it.
+	 *
+	 * @return string
+	 */
+	public function pop()
+	{
+		return array_pop($this->segments);
+	}
+
+	/**
+	 * Shift the first segment from the key and return it.
+	 *
+	 * @return string
+	 */
+	public function shift()
+	{
+		return array_shift($this->segments);
+	}
+
+	/**
 	 * Get the string version of the key.
 	 *
 	 * @return string
