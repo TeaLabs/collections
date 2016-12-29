@@ -13,5 +13,12 @@
         <testsuite name="arr">
             <file>tests/ArrTest.php</file>
         </testsuite>
+        <testsuite name="arr.base">
+            <file>tests/BaseArrTest.php</file>
+        </testsuite>
+        <testsuite name="arr.all">
+            <file>tests/BaseArrTest.php</file>
+            <file>tests/ArrTest.php</file>
+        </testsuite>
     </testsuites>
 </phpunit>
