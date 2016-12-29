@@ -3,109 +3,72 @@
 namespace Tea\Collections;
 
 use ArrayAccess;
+use Traversable;
+use JsonSerializable;
+use Illuminate\Support\Arr as IlluminateArr;
 use Illuminate\Support\Collection as IlluminateCollection;
 use Illuminate\Contracts\Support\Jsonable as IlluminateJsonable;
 use Illuminate\Contracts\Support\Arrayable as IlluminateArrayable;
 
-class Arr
+class Arr extends IlluminateArr
 {
+
 	/**
-	 * Determine whether the given value is array accessible.
+	 * Flatten a multi-dimensional array with the keys joined by dots or a given
+	 * separator.
 	 *
-	 * @param  mixed  $value
-	 * @return bool
+	 * @param  array        $array
+	 * @param  bool         $assocOnly
+	 * @param  int|null     $depth
+	 * @param  string|null  $separator
+	 * @return array
 	 */
-	public static function accessible($value)
+	public static function dot($array, $assocOnly = false, $depth = null, $separator = null)
 	{
-		return is_array($value) || $value instanceof ArrayAccess;
+		return static::level($array, $assocOnly, $depth, $separator);
 	}
 
 	/**
-	 * Add an element to an array using "dot" notation if it doesn't exist.
+	 * Flatten a multi-dimensional array with the keys joined by dots or a given
+	 * separator.
 	 *
-	 * @param  array   $array
-	 * @param  string  $key
-	 * @param  mixed   $value
+	 * @param  array        $array
+	 * @param  bool         $assocOnly
+	 * @param  int|null     $depth
+	 * @param  string|null  $separator
 	 * @return array
 	 */
-	public static function add($array, $key, $value)
+	public static function level($array, $assocOnly = true, $depth = null, $separator = null, $p = '')
 	{
-		if (is_null(static::get($array, $key))) {
-			static::set($array, $key, $value);
-		}
+		if($array instanceof IlluminateCollection)
+			$array = $array->all();
 
-		return $array;
-	}
+		if($assocOnly && !static::isAssoc($array))
+			return $array;
 
-	/**
-	 * Collapse an array of arrays into a single array.
-	 *
-	 * @param  array  $array
-	 * @return array
-	 */
-	public static function collapse($array)
-	{
-		$results = [];
+		if(is_null($depth))
+			$depth = INF;
 
-		foreach ($array as $values) {
-			if ($values instanceof IlluminateCollection) {
-				$values = $values->all();
-			} elseif (! is_array($values)) {
-				continue;
-			}
+		$sep = $separator ?: Key::SEPARATOR;
 
-			$results = array_merge($results, $values);
-		}
-
-		return $results;
-	}
-
-	/**
-	 * Divide an array into two arrays. One with keys and the other with values.
-	 *
-	 * @param  array  $array
-	 * @return array
-	 */
-	public static function divide($array)
-	{
-		return [array_keys($array), array_values($array)];
-	}
-
-	/**
-	 * Flatten a multi-dimensional associative array with dots.
-	 *
-	 * @param  array   $array
-	 * @param  string  $prepend
-	 * @return array
-	 */
-	public static function dot($array, $prepend = '')
-	{
 		$results = [];
 
 		foreach ($array as $key => $value) {
-			if (is_array($value) && ! empty($value)) {
-				$results = array_merge($results, static::dot($value, $prepend.$key.'.'));
-			} else {
-				$results[$prepend.$key] = $value;
-			}
+			$value = $value instanceof IlluminateCollection ? $value->all() : $value;
+
+			if(!is_array($value) || empty($value))
+				$results[$p.$key] = $value;
+			elseif($assocOnly && !static::isAssoc($value))
+				$results[$p.$key] = $value;
+			elseif($depth === 1)
+				$results[$p.$key] = $value;
+			else
+				$results = array_merge($results, static::level($value, $assocOnly, $depth-1, $sep, $p.$key.$sep ));
 		}
 
 		return $results;
 	}
 
-	/**
-	 * Get all of the given array except for a specified array of items.
-	 *
-	 * @param  array  $array
-	 * @param  array|string  $keys
-	 * @return array
-	 */
-	public static function except($array, $keys)
-	{
-		static::forget($array, $keys);
-
-		return $array;
-	}
 
 	/**
 	 * Determine if the given key exists in the provided array.
@@ -121,74 +84,6 @@ class Arr
 		}
 
 		return array_key_exists( (string) $key, $array);
-	}
-
-	/**
-	 * Return the first element in an array passing a given truth test.
-	 *
-	 * @param  array  $array
-	 * @param  callable|null  $callback
-	 * @param  mixed  $default
-	 * @return mixed
-	 */
-	public static function first($array, callable $callback = null, $default = null)
-	{
-		if (is_null($callback)) {
-			if (empty($array)) {
-				return value($default);
-			}
-
-			foreach ($array as $item) {
-				return $item;
-			}
-		}
-
-		foreach ($array as $key => $value) {
-			if (call_user_func($callback, $value, $key)) {
-				return $value;
-			}
-		}
-
-		return value($default);
-	}
-
-	/**
-	 * Return the last element in an array passing a given truth test.
-	 *
-	 * @param  array  $array
-	 * @param  callable|null  $callback
-	 * @param  mixed  $default
-	 * @return mixed
-	 */
-	public static function last($array, callable $callback = null, $default = null)
-	{
-		if (is_null($callback)) {
-			return empty($array) ? value($default) : end($array);
-		}
-
-		return static::first(array_reverse($array, true), $callback, $default);
-	}
-
-	/**
-	 * Flatten a multi-dimensional array into a single level.
-	 *
-	 * @param  array  $array
-	 * @param  int  $depth
-	 * @return array
-	 */
-	public static function flatten($array, $depth = INF)
-	{
-		return array_reduce($array, function ($result, $item) use ($depth) {
-			$item = $item instanceof IlluminateCollection ? $item->all() : $item;
-
-			if (! is_array($item)) {
-				return array_merge($result, [$item]);
-			} elseif ($depth === 1) {
-				return array_merge($result, array_values($item));
-			} else {
-				return array_merge($result, static::flatten($item, $depth - 1));
-			}
-		}, []);
 	}
 
 	/**
@@ -256,7 +151,7 @@ class Arr
 			return $array[$key];
 		}
 
-		foreach (explode('.', $key) as $segment) {
+		foreach (static::toKey($key) as $segment) {
 			if (static::accessible($array) && static::exists($array, $segment)) {
 				$array = $array[$segment];
 			} else {
@@ -276,64 +171,29 @@ class Arr
 	 */
 	public static function has($array, $keys)
 	{
-		if (is_null($keys)) {
+		if(is_null($keys) || !$array)
 			return false;
-		}
 
 		$keys = static::toArray($keys);
 
-		if (! $array) {
+		if($keys === [])
 			return false;
-		}
-
-		if ($keys === []) {
-			return false;
-		}
 
 		foreach ($keys as $key) {
 			$subKeyArray = $array;
 
-			if (static::exists($array, $key)) {
+			if (static::exists($array, $key))
 				continue;
-			}
 
 			foreach (static::toKey($key) as $segment) {
-				if (static::accessible($subKeyArray) && static::exists($subKeyArray, $segment)) {
+				if (static::accessible($subKeyArray) && static::exists($subKeyArray, $segment))
 					$subKeyArray = $subKeyArray[$segment];
-				} else {
+				else
 					return false;
-				}
 			}
 		}
 
 		return true;
-	}
-
-	/**
-	 * Determines if an array is associative.
-	 *
-	 * An array is "associative" if it doesn't have sequential numerical keys beginning with zero.
-	 *
-	 * @param  array  $array
-	 * @return bool
-	 */
-	public static function isAssoc(array $array)
-	{
-		$keys = array_keys($array);
-
-		return array_keys($keys) !== $keys;
-	}
-
-	/**
-	 * Get a subset of the items from the given array.
-	 *
-	 * @param  array  $array
-	 * @param  array|string  $keys
-	 * @return array
-	 */
-	public static function only($array, $keys)
-	{
-		return array_intersect_key($array, array_flip((array) $keys));
 	}
 
 	/**
@@ -377,47 +237,9 @@ class Arr
 	 */
 	protected static function explodePluckParameters($value, $key)
 	{
-		$value = is_string($value) ? explode('.', $value) : $value;
-
-		$key = is_null($key) || is_array($key) ? $key : explode('.', $key);
-
+		$value = is_null($key) || is_array($value) ? $value : static::toKey($value)->segments();
+		$key = is_null($key) || is_array($key) ? $key : static::toKey($key)->segments();
 		return [$value, $key];
-	}
-
-	/**
-	 * Push an item onto the beginning of an array.
-	 *
-	 * @param  array  $array
-	 * @param  mixed  $value
-	 * @param  mixed  $key
-	 * @return array
-	 */
-	public static function prepend($array, $value, $key = null)
-	{
-		if (is_null($key)) {
-			array_unshift($array, $value);
-		} else {
-			$array = [$key => $value] + $array;
-		}
-
-		return $array;
-	}
-
-	/**
-	 * Get a value from the array, and remove it.
-	 *
-	 * @param  array   $array
-	 * @param  string  $key
-	 * @param  mixed   $default
-	 * @return mixed
-	 */
-	public static function pull(&$array, $key, $default = null)
-	{
-		$value = static::get($array, $key, $default);
-
-		static::forget($array, $key);
-
-		return $value;
 	}
 
 	/**
@@ -425,33 +247,32 @@ class Arr
 	 *
 	 * If no key is given to the method, the entire array will be replaced.
 	 *
-	 * @param  array   $array
-	 * @param  string  $key
-	 * @param  mixed   $value
-	 * @return array
+	 * @param  array|\ArrayAccess           $array
+	 * @param  string|\Tea\Collections\Key  $key
+	 * @param  mixed                        $value
+	 * @param  callable                     $default
+	 * @return array|\ArrayAccess
 	 */
-	public static function set(&$array, $key, $value)
+	public static function set(&$array, $key, $value, callable $default = null)
 	{
-		if (is_null($key)) {
+		if (is_null($key))
 			return $array = $value;
-		}
 
-		$keys = explode('.', $key);
+		$keys = static::toKey($key);
 
 		while (count($keys) > 1) {
-			$key = array_shift($keys);
+			$key = $keys->shift();
 
 			// If the key doesn't exist at this depth, we will just create an empty array
 			// to hold the next value, allowing us to create the arrays to hold final
 			// values at the correct depth. Then we'll keep digging into the array.
-			if (! isset($array[$key]) || ! is_array($array[$key])) {
-				$array[$key] = [];
-			}
+			if (! isset($array[$key]) || ! is_array($array[$key]))
+				$array[$key] = is_null($default) ? [] : $default($key, $array);
 
 			$array = &$array[$key];
 		}
 
-		$array[array_shift($keys)] = $value;
+		$array[$keys->shift()] = $value;
 
 		return $array;
 	}
@@ -469,29 +290,6 @@ class Arr
 	}
 
 	/**
-	 * Recursively sort an array by keys and values.
-	 *
-	 * @param  array  $array
-	 * @return array
-	 */
-	public static function sortRecursive($array)
-	{
-		foreach ($array as &$value) {
-			if (is_array($value)) {
-				$value = static::sortRecursive($value);
-			}
-		}
-
-		if (static::isAssoc($array)) {
-			ksort($array);
-		} else {
-			sort($array);
-		}
-
-		return $array;
-	}
-
-	/**
 	 * Cast the given object to an array
 	 *
 	 * @param  mixed  $object
@@ -499,7 +297,9 @@ class Arr
 	 */
 	public static function toArray($object)
 	{
-		if(is_array($object) || !is_object($object))
+		if(is_array($object))
+			return $object;
+		elseif(!is_object($object))
 			return (array) $object;
 		elseif ($object instanceof IlluminateCollection)
 			return $object->all();
@@ -507,16 +307,14 @@ class Arr
 			return $object->toArray();
 		elseif(method_exists($object, '__toString'))
 			return [$object];
-		elseif($object instanceof IlluminateJsonable && !is_iterable($object))
-			return json_decode($object->toJson(), true);
-		elseif (is_iterable($object)) {
-			$array = [];
-			foreach ($object as $key => $value)
-				$array[$key] = $value;
-			return $array;
-		}
-
-		return (array) $object;
+		elseif ($items instanceof IlluminateJsonable)
+			return (array) json_decode($items->toJson(), true);
+		elseif ($items instanceof JsonSerializable)
+			return (array) $items->jsonSerialize();
+		elseif ($object instanceof Traversable)
+			return iterator_to_array($object);
+		else
+			return (array) $object;
 	}
 
 	/**
@@ -528,18 +326,6 @@ class Arr
 	 */
 	public static function toKey($key = null, $separator = null)
 	{
-		return Key::make($key, $separator);
-	}
-
-	/**
-	 * Filter the array using the given callback.
-	 *
-	 * @param  array  $array
-	 * @param  callable  $callback
-	 * @return array
-	 */
-	public static function where($array, callable $callback)
-	{
-		return array_filter($array, $callback, ARRAY_FILTER_USE_BOTH);
+		return new Key($key, $separator);
 	}
 }

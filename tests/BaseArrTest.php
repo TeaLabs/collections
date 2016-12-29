@@ -32,6 +32,9 @@ class BaseArrTest extends TestCase
 	{
 		$data = [['foo', 'bar'], ['baz']];
 		$this->assertEquals(['foo', 'bar', 'baz'], Arr::collapse($data));
+
+		$data = [['foo', 'bar'], ['baz'], 'far'];
+		$this->assertEquals(['foo', 'bar', 'baz'], Arr::collapse($data));
 	}
 
 	public function testDivide()
@@ -298,9 +301,11 @@ class BaseArrTest extends TestCase
 			['developer' => ['name' => 'Abigail']],
 		];
 
-		$array = Arr::pluck($array, 'developer.name');
+		$result = Arr::pluck($array, 'developer.name');
+		$this->assertEquals(['Taylor', 'Abigail'], $result);
 
-		$this->assertEquals(['Taylor', 'Abigail'], $array);
+		$result = Arr::pluck($array, ['developer', 'name']);
+		$this->assertEquals(['Taylor', 'Abigail'], $result);
 	}
 
 	public function testPluckWithKeys()
