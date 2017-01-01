@@ -20,8 +20,15 @@
             <file>tests/BaseArrTest.php</file>
             <file>tests/ArrTest.php</file>
         </testsuite>
+        <testsuite name="collection">
+            <file>tests/CollectionTest.php</file>
+        </testsuite>
         <testsuite name="collection.base">
             <file>tests/BaseCollectionTest.php</file>
+        </testsuite>
+        <testsuite name="collection.all">
+            <file>tests/BaseCollectionTest.php</file>
+            <file>tests/CollectionTest.php</file>
         </testsuite>
     </testsuites>
 </phpunit>
