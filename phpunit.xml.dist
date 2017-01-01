@@ -20,5 +20,8 @@
             <file>tests/BaseArrTest.php</file>
             <file>tests/ArrTest.php</file>
         </testsuite>
+        <testsuite name="collection.base">
+            <file>tests/BaseCollectionTest.php</file>
+        </testsuite>
     </testsuites>
 </phpunit>
