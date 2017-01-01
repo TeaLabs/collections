@@ -10,6 +10,12 @@ use Tea\Collections\Collection;
 use function Tea\Collections\key;
 use function Tea\Collections\collect;
 
+use Tea\Collections\Tests\Mocks\IterableObject;
+use Tea\Collections\Tests\Mocks\JsonableObject;
+use Tea\Collections\Tests\Mocks\ArrayableObject;
+use Tea\Collections\Tests\Mocks\JsonSerializeObject;
+use Tea\Collections\Tests\Mocks\ToStringImplementation;
+
 class ArrTest extends TestCase
 {
 	protected function usrColl()
@@ -300,6 +306,32 @@ class ArrTest extends TestCase
 		if(!is_null($resolvedKey)){
 			$this->assertEquals($resolvedExpected, Arr::get($array, $resolvedKey));
 		}
+	}
+
+	public function toArrayProvider()
+	{
+		return [
+			[[], null],
+			[["foo"], "foo"],
+			[['foo' => 'bar'], ['foo' => 'bar']],
+			[['foo' => 'bar'], new Collection(['foo' => 'bar'])],
+			[['foo' => 'bar'], new ArrayableObject],
+			[['foo' => 'bar'], new IterableObject],
+			[['foo' => 'bar'], new JsonableObject],
+			[['foo' => 'bar'], new JsonSerializeObject],
+			[['foo bar'], new ToStringImplementation],
+			[['foo' => 'bar'], (object)['foo' => 'bar']],
+		];
+	}
+
+	/**
+	 * @dataProvider toArrayProvider
+	 */
+	public function testToArray($expected, $value)
+	{
+		$result = Arr::toArray($value);
+		$this->assertInternalType('array', $result);
+		$this->assertEquals($expected, $result);
 	}
 
 }
