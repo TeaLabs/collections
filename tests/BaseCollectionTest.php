@@ -7,8 +7,10 @@ use Mockery as m;
 use ReflectionClass;
 use JsonSerializable;
 use Tea\Collections\Collection;
-use Illuminate\Contracts\Support\Jsonable;
-use Illuminate\Contracts\Support\Arrayable;
+use Tea\Collections\Tests\Mocks\JsonableObject;
+use Tea\Collections\Tests\Mocks\ArrayableObject;
+use Tea\Collections\Tests\Mocks\JsonSerializeObject;
+use Tea\Collections\Tests\Mocks\ArrayAccessImplementation;
 
 class BaseCollectionTest extends TestCase
 {
@@ -135,15 +137,15 @@ class BaseCollectionTest extends TestCase
         $method = $class->getMethod('getArrayableItems');
         $method->setAccessible(true);
 
-        $items = new TestArrayableObject;
+        $items = new ArrayableObject;
         $array = $method->invokeArgs($collection, [$items]);
         $this->assertSame(['foo' => 'bar'], $array);
 
-        $items = new TestJsonableObject;
+        $items = new JsonableObject;
         $array = $method->invokeArgs($collection, [$items]);
         $this->assertSame(['foo' => 'bar'], $array);
 
-        $items = new TestJsonSerializeObject;
+        $items = new JsonSerializeObject;
         $array = $method->invokeArgs($collection, [$items]);
         $this->assertSame(['foo' => 'bar'], $array);
 
@@ -787,8 +789,8 @@ class BaseCollectionTest extends TestCase
     public function testPluckWithArrayAccessValues()
     {
         $data = new Collection([
-            new TestArrayAccessImplementation(['name' => 'taylor', 'email' => 'foo']),
-            new TestArrayAccessImplementation(['name' => 'dayle', 'email' => 'bar']),
+            new ArrayAccessImplementation(['name' => 'taylor', 'email' => 'foo']),
+            new ArrayAccessImplementation(['name' => 'dayle', 'email' => 'bar']),
         ]);
 
         $this->assertEquals(['taylor' => 'foo', 'dayle' => 'bar'], $data->pluck('email', 'name')->all());
@@ -1432,9 +1434,9 @@ class BaseCollectionTest extends TestCase
     public function testJsonSerialize()
     {
         $c = new Collection([
-            new TestArrayableObject(),
-            new TestJsonableObject(),
-            new TestJsonSerializeObject(),
+            new ArrayableObject(),
+            new JsonableObject(),
+            new JsonSerializeObject(),
             'baz',
         ]);
 
@@ -1750,59 +1752,5 @@ class TestAccessorEloquentTestStub
     public function getSomeAttribute()
     {
         return $this->attributes['some'];
-    }
-}
-
-class TestArrayAccessImplementation implements ArrayAccess
-{
-    private $arr;
-
-    public function __construct($arr)
-    {
-        $this->arr = $arr;
-    }
-
-    public function offsetExists($offset)
-    {
-        return isset($this->arr[$offset]);
-    }
-
-    public function offsetGet($offset)
-    {
-        return $this->arr[$offset];
-    }
-
-    public function offsetSet($offset, $value)
-    {
-        $this->arr[$offset] = $value;
-    }
-
-    public function offsetUnset($offset)
-    {
-        unset($this->arr[$offset]);
-    }
-}
-
-class TestArrayableObject implements Arrayable
-{
-    public function toArray()
-    {
-        return ['foo' => 'bar'];
-    }
-}
-
-class TestJsonableObject implements Jsonable
-{
-    public function toJson($options = 0)
-    {
-        return '{"foo":"bar"}';
-    }
-}
-
-class TestJsonSerializeObject implements JsonSerializable
-{
-    public function jsonSerialize()
-    {
-        return ['foo' => 'bar'];
     }
 }
