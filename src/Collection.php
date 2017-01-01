@@ -32,20 +32,41 @@ class Collection extends IlluminateCollection implements Arrayable, Jsonable
 		if($this->has($key))
 			return $this->get($key);
 
-		$this->set($key, $default);
+		$this->put($key, $default);
 
 		return $default;
 	}
 
 	/**
-	 * Get the items in the collection that are not present in the given items.
+	 * Get the items in the collection that are not present in the given items
+	 * by comparing both the values and the keys
 	 *
 	 * @param  mixed  $items
 	 * @return static
 	 */
-	public function diffKey($items)
+	public function diffAssoc($items)
 	{
-		return new static(array_diff_key($this->items, $this->getArrayableItems($items)));
+		return new static(array_diff_assoc($this->items, $this->getArrayableItems($items)));
+	}
+
+	/**
+	 * Create a new collection consisting of every n-th element.
+	 *
+	 * @param  int  $step
+	 * @param  int  $offset
+	 * @return static
+	 */
+	public function every($step, $offset = 0, $depreciatedValue = null)
+	{
+		$new = [];
+		$position = 0;
+		foreach ($this->items as $item) {
+			if ($position % $step === $offset) {
+				$new[] = $item;
+			}
+			$position++;
+		}
+		return new static($new);
 	}
 
 	/**
@@ -64,14 +85,15 @@ class Collection extends IlluminateCollection implements Arrayable, Jsonable
 	}
 
 	/**
-	 * Merge the collection with the given items. It is similar to
-	 * {@see \Tea\Collections\Collection::update()} but instead of merging the
-	 * new items into the current instance, it returns a new Collection with
-	 * the merged items.
+	 * Get a new collection with the items in the current merged with the given
+	 * items. This method is identical to {@see \Tea\Collections\Collection::update()}
+	 * except it creates a new instance with the merged items leaving the current
+	 * untouched.
 	 *
-	 * @uses   \Tea\Collections\Collection::update()
+	 * @see   \Tea\Collections\Collection::update()
 	 *
 	 * @param  mixed  $items
+	 * @param  bool   $strict
 	 * @param  bool   $recursive
 	 * @return static
 	 */
@@ -89,20 +111,21 @@ class Collection extends IlluminateCollection implements Arrayable, Jsonable
 	 * By default, only the items with string keys are updated. Those of numeric
 	 * keys, are instead appended to the collection with (possibly) new key(s)
 	 * even if the original collection contained item(s) with the same key.
-	 * $strict can be set to true to have numerically indexed items updated.
+	 * However, if $strict is passed as true, numerically indexed items will also
+	 * be updated.
 	 *
 	 * Also, {@see \Tea\Collections\Collection::merge()}.
 	 *
-	 * When $updateNumeric is false or not given:
+	 * When $strict is false or not given:
 	 * @uses   array_merge() when $recursive is false (default)
 	 * @uses   array_merge_recursive() when $recursive is true
 	 *
-	 * When $updateNumeric is true:
+	 * When $strict is true:
 	 * @uses   array_replace() when $recursive is false (default)
 	 * @uses   array_replace_recursive() when $recursive is true
 	 *
 	 * @param  mixed  $items
-	 * @param  bool   $updateNumeric
+	 * @param  bool   $strict
 	 * @param  bool   $recursive
 	 * @return $this
 	 */
@@ -110,7 +133,7 @@ class Collection extends IlluminateCollection implements Arrayable, Jsonable
 	{
 		$items = $this->getArrayableItems($items);
 
-		if($updateNumeric)
+		if($strict)
 			if($recursive)
 				$this->items = array_replace_recursive($this->items, $items);
 			else
