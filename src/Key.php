@@ -5,10 +5,11 @@ use Countable;
 use ArrayAccess;
 use Tea\Uzi\Uzi;
 use ArrayIterator;
+use Tea\Regex\Regex;
 use IteratorAggregate;
+use Tea\Contracts\General\Sliceable;
 
-
-class Key implements Countable, ArrayAccess, IteratorAggregate
+class Key implements Countable, ArrayAccess, IteratorAggregate, Sliceable
 {
 	/**
 	 * @var string
@@ -133,6 +134,20 @@ class Key implements Countable, ArrayAccess, IteratorAggregate
 	{
 		return count($this->segments());
 	}
+
+
+	/**
+	 * Get a slice the segments.
+	 *
+	 * @param  int       $offset
+	 * @param  int|null  $length
+	 * @return array
+	 */
+	public function slice($offset = 0, $length = null)
+	{
+		return array_slice($this->segments, $offset, $length);
+	}
+
 
 	/**
 	 * Get an iterator for the key segments

@@ -280,5 +280,26 @@ class KeyTest extends TestCase
 
 	}
 
+	public function sliceProvider()
+	{
+		return [
+			[ ['foo', 'bar', 'baz'], 'foo.bar.baz' ],
+			[ ['bar', 'baz'], 'foo.bar.baz', 1 ],
+			[ ['bar'], 'foo.bar.baz', 1, 1],
+			[ ['bar'], 'foo.bar.baz', -2, 1],
+			[ [ 'foo', 'bar'], 'foo.bar.baz', 0, -1],
+		];
+	}
+
+	/**
+	 * @dataProvider sliceProvider()
+	 */
+	public function testSlice($expected, $segments, $offset = 0, $length = null, $separator = null)
+	{
+		$key = $this->make($segments, $separator);
+		$result = $key->slice($offset, $length);
+		$this->assertEquals($expected, $result);
+	}
+
 
 }
