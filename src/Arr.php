@@ -307,10 +307,10 @@ class Arr extends IlluminateArr
 			return $object->toArray();
 		elseif(method_exists($object, '__toString'))
 			return [$object];
-		elseif ($items instanceof IlluminateJsonable)
-			return (array) json_decode($items->toJson(), true);
-		elseif ($items instanceof JsonSerializable)
-			return (array) $items->jsonSerialize();
+		elseif ($object instanceof IlluminateJsonable)
+			return (array) json_decode($object->toJson(), true);
+		elseif ($object instanceof JsonSerializable)
+			return (array) $object->jsonSerialize();
 		elseif ($object instanceof Traversable)
 			return iterator_to_array($object);
 		else
