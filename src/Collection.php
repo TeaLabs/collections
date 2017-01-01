@@ -70,18 +70,25 @@ class Collection extends IlluminateCollection implements Arrayable, Jsonable
 	}
 
 	/**
-	 * Determine if an any of item exists in the collection.
+	 * Determine if all or any of the given items exists in the collection by
+	 * key. $keys can be a single item key or an iterable of keys. If $keys is an
+	 * iterable and $any is false or not given, will return true if all keys in
+	 * $keys are exist in the collection and false otherwise. If $keys is an
+	 * iterable and $any is true, will return true if at least one of the keys
+	 * in $key exists in the collection and false otherwise.
 	 *
-	 * @param  iterable  $keys
+	 * @param  mixed|iterable  $keys
+	 * @param  bool            $any
 	 * @return bool
 	 */
-	public function hasAny($keys)
+	public function has($keys, $any = false)
 	{
-		foreach ($keys as $key)
-			if($this->has($key))
-				return true;
-
-		return false;
+		foreach ($this->getArrayableItems($keys) as $key) {
+			$exists = $this->offsetExists($key);
+			if(($any && $exists) || (!$any && !$exists))
+				return $exists;
+		}
+		return $any ? false : true;
 	}
 
 	/**
