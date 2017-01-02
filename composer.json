@@ -24,6 +24,7 @@
         "tea/regex": "~0.1.0",
         "tea/future": "~0.1.0",
         "tea/contracts": "~0.1.0",
+        "tea/exception": "~0.1.0",
         "illuminate/support": "~5.1"
     },
     "require-dev": {
