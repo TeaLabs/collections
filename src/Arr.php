@@ -99,15 +99,13 @@ class Arr extends IlluminateArr
 
 		$keys = static::toArray($keys);
 
-		if (count($keys) === 0) {
+		if (count($keys) === 0)
 			return;
-		}
 
 		foreach ($keys as $key) {
 			// if the exact key exists in the top-level, remove it
 			if (static::exists($array, $key)) {
-				unset($array[$key]);
-
+				unset($array[(string) $key]);
 				continue;
 			}
 
@@ -139,17 +137,15 @@ class Arr extends IlluminateArr
 	 */
 	public static function get($array, $key, $default = null)
 	{
-		if (! static::accessible($array)) {
+		if (!static::accessible($array))
 			return value($default);
-		}
 
-		if (is_null($key)) {
+		if (is_null($key))
 			return $array;
-		}
 
-		if (static::exists($array, $key)) {
-			return $array[$key];
-		}
+		if (static::exists($array, $key))
+			return $array[(string) $key];
+
 
 		foreach (static::toKey($key) as $segment) {
 			if (static::accessible($array) && static::exists($array, $segment)) {
