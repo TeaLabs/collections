@@ -1,7 +1,7 @@
 <?php
 namespace Tea\Collections;
 
-
+use Tea\Exceptions\KeyError;
 
 class Forest extends Collection
 {
@@ -73,13 +73,13 @@ class Forest extends Collection
 	/**
 	 * Remove an item from the collection by key.
 	 *
-	 * @param  string|array  $keys
+	 * @param  string|iterable  $paths
 	 * @return $this
 	 */
-	public function forget($keys)
+	public function forget($paths)
 	{
-		foreach ($this->getArrayableItems($keys) as $key)
-			$this->offsetUnset($key);
+		foreach ($this->getArrayableItems($paths) as $path)
+			$this->offsetUnset($path);
 
 		return $this;
 	}
@@ -93,9 +93,20 @@ class Forest extends Collection
 	 */
 	public function get($path, $default = null)
 	{
-		return Arr::get($this->items, $this->keyFor($key), $default);
+		return Arr::get($this->items, $this->keyFor($path), $default);
 	}
 
+	/**
+	 * Get and remove an item from the collection.
+	 *
+	 * @param  mixed  $path
+	 * @param  mixed  $default
+	 * @return mixed
+	 */
+	public function pull($path, $default = null)
+	{
+		return Arr::pull($this->items, $this->keyFor($path), $default);
+	}
 
 	/**
 	 * Determine if an item exists at an offset.
@@ -145,7 +156,7 @@ class Forest extends Collection
 	 */
 	public function offsetUnset($path)
 	{
-		Arr::forget($this->keyFor($path));
+		Arr::forget($this->items, $this->keyFor($path));
 	}
 
 
