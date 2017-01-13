@@ -30,5 +30,8 @@
             <file>tests/BaseCollectionTest.php</file>
             <file>tests/CollectionTest.php</file>
         </testsuite>
+        <testsuite name="forest">
+            <file>tests/ForestTest.php</file>
+        </testsuite>
     </testsuites>
 </phpunit>
