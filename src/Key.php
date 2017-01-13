@@ -5,7 +5,6 @@ use Countable;
 use ArrayAccess;
 use Tea\Uzi\Uzi;
 use ArrayIterator;
-use Tea\Regex\Regex;
 use IteratorAggregate;
 use Tea\Contracts\General\Sliceable;
 
